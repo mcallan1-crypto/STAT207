@@ -1,0 +1,117 @@
+index.html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Empirical Rule Challenge</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      background: #0f172a;
+      color: white;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .question-box {
+      font-size: 22px;
+      margin-bottom: 25px;
+    }
+
+    button {
+      padding: 12px 18px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    button:hover {
+      background-color: #2563eb;
+    }
+
+    .score {
+      margin-top: 20px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>68–95–99.7 Rule Challenge</h1>
+
+<div class="question-box" id="question"></div>
+<div id="choices"></div>
+
+<div class="score">
+  Score: <span id="score">0</span>
+</div>
+
+<script>
+let score = 0;
+
+function generateQuestion() {
+  const mean = Math.floor(Math.random() * 50) + 50;
+  const sd = Math.floor(Math.random() * 10) + 5;
+  const type = Math.floor(Math.random() * 3);
+
+  let questionText = "";
+  let correctAnswer = "";
+
+  if (type === 0) {
+    questionText = `Mean = ${mean}, SD = ${sd}. 
+    What percent of data falls within ±1 standard deviation?`;
+    correctAnswer = "68%";
+  }
+
+  if (type === 1) {
+    questionText = `Mean = ${mean}, SD = ${sd}. 
+    What percent of data falls within ±2 standard deviations?`;
+    correctAnswer = "95%";
+  }
+
+  if (type === 2) {
+    questionText = `Mean = ${mean}, SD = ${sd}. 
+    What percent of data falls within ±3 standard deviations?`;
+    correctAnswer = "99.7%";
+  }
+
+  document.getElementById("question").innerHTML = questionText;
+
+  const answers = ["68%", "95%", "99.7%", "50%"];
+  document.getElementById("choices").innerHTML = "";
+
+  answers.sort(() => Math.random() - 0.5);
+
+  answers.forEach(answer => {
+    const btn = document.createElement("button");
+    btn.innerText = answer;
+
+    btn.onclick = function () {
+      if (answer === correctAnswer) {
+        score++;
+        alert("Correct! 🎉");
+      } else {
+        alert("Incorrect 😢");
+      }
+
+      document.getElementById("score").innerText = score;
+      generateQuestion();
+    };
+
+    document.getElementById("choices").appendChild(btn);
+  });
+}
+
+generateQuestion();
+</script>
+
+</body>
+</html>
+
