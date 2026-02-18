@@ -1,59 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Empirical Rule Challenge</title>
+  <title>Empirical Olympics: Ice Skating Battle</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 40px;
-      background: #0f172a;
+      background: linear-gradient(to bottom, #0f172a, #1e3a8a);
       color: white;
     }
 
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
+    }
+
+    .arena {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #93c5fd;
     }
 
     .question-box {
       font-size: 22px;
-      margin-bottom: 25px;
+      margin: 20px 0;
     }
 
     button {
-      padding: 12px 18px;
+      padding: 12px 20px;
       margin: 10px;
       font-size: 16px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: none;
       cursor: pointer;
       background-color: #3b82f6;
       color: white;
+      transition: 0.3s;
     }
 
     button:hover {
       background-color: #2563eb;
+      transform: scale(1.05);
     }
 
-    .score {
+    .scoreboard {
       margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .message {
+      margin-top: 15px;
       font-size: 20px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-<h1>68–95–99.7 Rule Challenge</h1>
+<h1>⛸️ Empirical Olympics ⛸️</h1>
+<div class="arena" id="arena">Practice Ice</div>
 
 <div class="question-box" id="question"></div>
 <div id="choices"></div>
 
-<div class="score">
-  Score: <span id="score">0</span>
+<div class="scoreboard">
+  Score: <span id="score">0</span> |
+  Streak: <span id="streak">0</span>
 </div>
+
+<div class="message" id="message"></div>
 
 <script>
 let score = 0;
+let streak = 0;
+let level = 1;
+
+function updateArena() {
+  const arena = document.getElementById("arena");
+
+  if (score < 3) arena.innerText = "Practice Ice 🧊";
+  else if (score < 6) arena.innerText = "Regionals 🥉";
+  else if (score < 10) arena.innerText = "Nationals 🥈";
+  else arena.innerText = "Olympic Final 🥇🔥";
+}
 
 function generateQuestion() {
   const mean = Math.floor(Math.random() * 50) + 50;
@@ -62,23 +91,27 @@ function generateQuestion() {
 
   let questionText = "";
   let correctAnswer = "";
+  let trickName = "";
 
   if (type === 0) {
     questionText = `Mean = ${mean}, SD = ${sd}. 
-    What percent of data falls within ±1 standard deviation?`;
+    What percent falls within ±1 SD?`;
     correctAnswer = "68%";
+    trickName = "Single Jump ⛸️";
   }
 
   if (type === 1) {
     questionText = `Mean = ${mean}, SD = ${sd}. 
-    What percent of data falls within ±2 standard deviations?`;
+    What percent falls within ±2 SD?`;
     correctAnswer = "95%";
+    trickName = "Double Jump ✨";
   }
 
   if (type === 2) {
     questionText = `Mean = ${mean}, SD = ${sd}. 
-    What percent of data falls within ±3 standard deviations?`;
+    What percent falls within ±3 SD?`;
     correctAnswer = "99.7%";
+    trickName = "Triple Jump 🔥";
   }
 
   document.getElementById("question").innerHTML = questionText;
@@ -95,12 +128,18 @@ function generateQuestion() {
     btn.onclick = function () {
       if (answer === correctAnswer) {
         score++;
-        alert("Correct! 🎉");
+        streak++;
+        document.getElementById("message").innerText =
+          `LANDED! ${trickName} + Crowd goes wild! 🎉`;
       } else {
-        alert("Incorrect 😢");
+        streak = 0;
+        document.getElementById("message").innerText =
+          "Oh no! You slipped on the ice 😭";
       }
 
       document.getElementById("score").innerText = score;
+      document.getElementById("streak").innerText = streak;
+      updateArena();
       generateQuestion();
     };
 
