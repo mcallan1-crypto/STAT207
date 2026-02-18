@@ -1,155 +1,629 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Empirical Olympics: Ice Skating Battle</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Empirical Olympics: Ice Battle</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 40px;
-      background: linear-gradient(to bottom, #0f172a, #1e3a8a);
-      color: white;
+    :root{
+      --bg1:#071022;
+      --bg2:#12307a;
+      --card:rgba(255,255,255,.08);
+      --card2:rgba(255,255,255,.12);
+      --text:#eaf2ff;
+      --muted:#a7c0ff;
+      --accent:#60a5fa;
+      --good:#22c55e;
+      --bad:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 30% 0%, var(--bg2), var(--bg1));
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:22px;
+    }
+    .wrap{width:min(940px,100%);}
+    header{
+      display:flex; gap:14px; align-items:flex-end; justify-content:space-between;
+      margin-bottom:16px;
+    }
+    h1{margin:0; font-size:28px; letter-spacing:.2px}
+    .sub{margin:0; color:var(--muted); font-size:14px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap:14px;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
     }
 
-    h1 {
-      margin-bottom: 10px;
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      padding:16px;
     }
 
-    .arena {
-      font-size: 18px;
-      margin-bottom: 15px;
-      color: #93c5fd;
+    /* RINK */
+    .rink{
+      position:relative;
+      height:160px;
+      overflow:hidden;
+      border-radius:16px;
+      background:
+        radial-gradient(800px 180px at 20% 20%, rgba(255,255,255,.14), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.14);
+    }
+    .snow{
+      position:absolute; inset:0;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.30) 0 1px, transparent 2px),
+        radial-gradient(circle at 60% 40%, rgba(255,255,255,.20) 0 1px, transparent 2px),
+        radial-gradient(circle at 40% 80%, rgba(255,255,255,.18) 0 1px, transparent 2px);
+      background-size: 120px 120px, 160px 160px, 200px 200px;
+      opacity:.55;
+      animation: drift 6s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes drift{
+      from{transform:translateY(-10px)}
+      to{transform:translateY(10px)}
+    }
+    .lane{
+      position:absolute; left:12px; right:12px;
+      height:56px;
+      border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px dashed rgba(255,255,255,.18);
+    }
+    .lane.you{top:22px}
+    .lane.rival{top:90px; opacity:.85}
+
+    .finish{
+      position:absolute; top:12px; bottom:12px; right:18px;
+      width:10px; border-radius:8px;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255,255,255,.85) 0 8px,
+        rgba(0,0,0,.25) 8px 16px
+      );
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
+      opacity:.95;
     }
 
-    .question-box {
-      font-size: 22px;
-      margin: 20px 0;
+    .skater{
+      position:absolute;
+      top:0;
+      left:0;
+      width:44px; height:44px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:30px;
+      transform: translateX(0);
+      transition: transform .28s ease;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,.45));
+    }
+    .skater.you{top:28px}
+    .skater.rival{top:96px; font-size:28px; opacity:.95}
+
+    /* trick animations */
+    .jump{ animation: jump .45s ease; }
+    @keyframes jump{
+      0%{transform:translateX(var(--x)) translateY(0) rotate(0deg)}
+      40%{transform:translateX(var(--x)) translateY(-18px) rotate(-6deg)}
+      100%{transform:translateX(var(--x)) translateY(0) rotate(0deg)}
+    }
+    .spin{ animation: spin .55s ease; }
+    @keyframes spin{
+      0%{transform:translateX(var(--x)) rotate(0deg)}
+      100%{transform:translateX(var(--x)) rotate(360deg)}
+    }
+    .fall{ animation: fall .55s ease; }
+    @keyframes fall{
+      0%{transform:translateX(var(--x)) rotate(0deg)}
+      40%{transform:translateX(var(--x)) rotate(20deg)}
+      100%{transform:translateX(var(--x)) rotate(0deg)}
     }
 
-    button {
-      padding: 12px 20px;
-      margin: 10px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      background-color: #3b82f6;
-      color: white;
-      transition: 0.3s;
+    .hud{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-top:12px;
+    }
+    .pill{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:14px;
+      color:var(--muted);
+    }
+    .pill b{color:var(--text)}
+    .status{
+      min-height:24px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .status.good{color:var(--good)}
+    .status.bad{color:var(--bad)}
+    .status.neutral{color:var(--muted)}
+
+    /* Q/A */
+    .qtitle{display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
+    .qtitle h2{margin:0; font-size:18px}
+    .timer{font-variant-numeric: tabular-nums; color:var(--muted)}
+    .question{
+      margin-top:10px;
+      font-size:20px;
+      line-height:1.25;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:14px;
+    }
+    .choices{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
+    @media (max-width: 520px){
+      .choices{grid-template-columns:1fr}
+    }
+    button{
+      border:0;
+      border-radius:14px;
+      padding:12px 12px;
+      font-size:16px;
+      cursor:pointer;
+      color:var(--text);
+      background: linear-gradient(180deg, rgba(96,165,250,.25), rgba(96,165,250,.12));
+      border:1px solid rgba(96,165,250,.35);
+      transition: transform .08s ease, filter .2s ease, background .2s ease;
+    }
+    button:hover{filter:brightness(1.08)}
+    button:active{transform:scale(.99)}
+    .small{
+      font-size:13px; color:var(--muted); margin-top:10px; line-height:1.35;
     }
 
-    button:hover {
-      background-color: #2563eb;
-      transform: scale(1.05);
-    }
-
-    .scoreboard {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-
-    .message {
-      margin-top: 15px;
-      font-size: 20px;
-      font-weight: bold;
+    .rightcol .card{display:flex; flex-direction:column; gap:12px}
+    .divider{height:1px; background:rgba(255,255,255,.10); margin:2px 0}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+    .secondary{
+      background: rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.14);
     }
   </style>
 </head>
+
 <body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>⛸️ Empirical Olympics: Ice Battle</h1>
+        <p class="sub">Answer stats questions to land tricks and race your rival across the rink.</p>
+      </div>
+      <div class="pill"><b>Mode:</b> Mixed Empirical Rule</div>
+    </header>
 
-<h1>⛸️ Empirical Olympics ⛸️</h1>
-<div class="arena" id="arena">Practice Ice</div>
+    <div class="grid">
+      <!-- LEFT: game -->
+      <div class="card">
+        <div class="rink" aria-label="Ice rink race">
+          <div class="snow"></div>
+          <div class="lane you"></div>
+          <div class="lane rival"></div>
+          <div class="finish" title="Finish line"></div>
 
-<div class="question-box" id="question"></div>
-<div id="choices"></div>
+          <div class="skater you" id="youSkater" style="--x:0px;">🧊⛸️</div>
+          <div class="skater rival" id="rivalSkater" style="--x:0px;">🟥⛸️</div>
+        </div>
 
-<div class="scoreboard">
-  Score: <span id="score">0</span> |
-  Streak: <span id="streak">0</span>
-</div>
+        <div class="hud">
+          <div class="pill">Score: <b id="score">0</b></div>
+          <div class="pill">Streak: <b id="streak">0</b></div>
+          <div class="pill">Level: <b id="level">Practice</b></div>
+          <div class="pill">Race: <b><span id="youDist">0</span>%</b> vs <b><span id="rivalDist">0</span>%</b></div>
+        </div>
 
-<div class="message" id="message"></div>
+        <div class="status neutral" id="status">Land tricks to level up. First to the finish wins.</div>
+      </div>
+
+      <!-- RIGHT: questions -->
+      <div class="rightcol">
+        <div class="card">
+          <div class="qtitle">
+            <h2>Judges’ Question</h2>
+            <div class="timer">Time: <span id="time">—</span></div>
+          </div>
+
+          <div class="question" id="question">Loading…</div>
+          <div class="choices" id="choices"></div>
+
+          <div class="small">
+            Tip: memorize the segments too: <b>34%</b> (μ to 1σ), <b>13.5%</b> (1σ to 2σ), <b>2.35%</b> (2σ to 3σ), and <b>0.15%</b> beyond 3σ (each tail).
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="btnrow">
+            <button class="secondary" id="restart">Restart Race</button>
+            <button class="secondary" id="toggleTimer">Timer: ON</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-let score = 0;
-let streak = 0;
-let level = 1;
+  // ------------------------
+  // Game state
+  // ------------------------
+  let score = 0;
+  let streak = 0;
 
-function updateArena() {
-  const arena = document.getElementById("arena");
+  // "distance" across rink in %
+  let youDist = 0;
+  let rivalDist = 0;
 
-  if (score < 3) arena.innerText = "Practice Ice 🧊";
-  else if (score < 6) arena.innerText = "Regionals 🥉";
-  else if (score < 10) arena.innerText = "Nationals 🥈";
-  else arena.innerText = "Olympic Final 🥇🔥";
-}
+  let timerOn = true;
+  let timeLeft = 18;
+  let tickHandle = null;
 
-function generateQuestion() {
-  const mean = Math.floor(Math.random() * 50) + 50;
-  const sd = Math.floor(Math.random() * 10) + 5;
-  const type = Math.floor(Math.random() * 3);
+  const youEl = document.getElementById("youSkater");
+  const rivalEl = document.getElementById("rivalSkater");
+  const scoreEl = document.getElementById("score");
+  const streakEl = document.getElementById("streak");
+  const levelEl = document.getElementById("level");
+  const youDistEl = document.getElementById("youDist");
+  const rivalDistEl = document.getElementById("rivalDist");
+  const statusEl = document.getElementById("status");
+  const qEl = document.getElementById("question");
+  const choicesEl = document.getElementById("choices");
+  const timeEl = document.getElementById("time");
 
-  let questionText = "";
-  let correctAnswer = "";
-  let trickName = "";
+  const restartBtn = document.getElementById("restart");
+  const toggleTimerBtn = document.getElementById("toggleTimer");
 
-  if (type === 0) {
-    questionText = `Mean = ${mean}, SD = ${sd}. 
-    What percent falls within ±1 SD?`;
-    correctAnswer = "68%";
-    trickName = "Single Jump ⛸️";
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+  function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function round1(x){ return Math.round(x*10)/10; }
+
+  function setStatus(msg, kind="neutral"){
+    statusEl.textContent = msg;
+    statusEl.className = "status " + kind;
   }
 
-  if (type === 1) {
-    questionText = `Mean = ${mean}, SD = ${sd}. 
-    What percent falls within ±2 SD?`;
-    correctAnswer = "95%";
-    trickName = "Double Jump ✨";
+  function updateLevel(){
+    // based on score
+    let lvl = "Practice";
+    if(score >= 4) lvl = "Regionals";
+    if(score >= 8) lvl = "Nationals";
+    if(score >= 12) lvl = "Olympic Final";
+    levelEl.textContent = lvl;
   }
 
-  if (type === 2) {
-    questionText = `Mean = ${mean}, SD = ${sd}. 
-    What percent falls within ±3 SD?`;
-    correctAnswer = "99.7%";
-    trickName = "Triple Jump 🔥";
+  function updateRaceUI(){
+    youDist = clamp(youDist, 0, 100);
+    rivalDist = clamp(rivalDist, 0, 100);
+
+    youDistEl.textContent = Math.round(youDist);
+    rivalDistEl.textContent = Math.round(rivalDist);
+
+    // map 0..100% to px inside rink lanes
+    // lanes have 12px padding each side, finish near right. We'll approximate 0..100% => 0..(100%-some margin)
+    const maxPx = 760; // generous; CSS handles overflow anyway
+    const youPx = Math.round((youDist/100) * maxPx);
+    const rivalPx = Math.round((rivalDist/100) * maxPx);
+
+    youEl.style.setProperty("--x", `${youPx}px`);
+    rivalEl.style.setProperty("--x", `${rivalPx}px`);
+    youEl.style.transform = `translateX(${youPx}px)`;
+    rivalEl.style.transform = `translateX(${rivalPx}px)`;
+
+    if(youDist >= 100 || rivalDist >= 100){
+      endRace();
+    }
   }
 
-  document.getElementById("question").innerHTML = questionText;
+  function animateSkater(el, kind){
+    // remove existing animation class to retrigger
+    el.classList.remove("jump","spin","fall");
+    // force reflow
+    void el.offsetWidth;
+    el.classList.add(kind);
+  }
 
-  const answers = ["68%", "95%", "99.7%", "50%"];
-  document.getElementById("choices").innerHTML = "";
+  function endRace(){
+    stopTimer();
+    // disable answer buttons
+    [...choicesEl.querySelectorAll("button")].forEach(b => b.disabled = true);
 
-  answers.sort(() => Math.random() - 0.5);
+    if(youDist >= 100 && rivalDist >= 100){
+      setStatus("PHOTO FINISH! It’s a tie 😭⛸️", "neutral");
+    } else if(youDist >= 100){
+      setStatus("🏆 YOU WIN! Gold medal moment. Judges are screaming.", "good");
+      animateSkater(youEl, "spin");
+    } else if(rivalDist >= 100){
+      setStatus("Your rival wins this heat 😤 Run it back!", "bad");
+      animateSkater(rivalEl, "spin");
+    }
+  }
 
-  answers.forEach(answer => {
-    const btn = document.createElement("button");
-    btn.innerText = answer;
+  // ------------------------
+  // Question generator
+  // ------------------------
+  function makeQuestion(){
+    // We'll generate questions about empirical rule + segment percents, plus count questions.
+    // Use a normal distribution assumption.
 
-    btn.onclick = function () {
-      if (answer === correctAnswer) {
-        score++;
-        streak++;
-        document.getElementById("message").innerText =
-          `LANDED! ${trickName} + Crowd goes wild! 🎉`;
-      } else {
-        streak = 0;
-        document.getElementById("message").innerText =
-          "Oh no! You slipped on the ice 😭";
+    const mu = randInt(50, 120);
+    const sigma = randInt(4, 14);
+    const N = choice([200, 500, 1000, 2000, 10000]);
+
+    // Precompute key cutoffs
+    const m1 = mu - sigma, p1 = mu + sigma;
+    const m2 = mu - 2*sigma, p2 = mu + 2*sigma;
+    const m3 = mu - 3*sigma, p3 = mu + 3*sigma;
+
+    const types = [
+      "within_k",      // within ±kσ
+      "between_edges", // between two cutoffs e.g. (μ-1σ, μ+2σ)
+      "segment",       // between μ and μ+1σ etc
+      "tail",          // above μ+2σ etc
+      "range_for_pct", // ask what range captures 95%
+      "count"          // convert percent to count
+    ];
+
+    const t = choice(types);
+
+    // Helper to build 4 choices with 1 correct
+    function makeChoices(correct, pool){
+      const set = new Set(pool);
+      set.delete(correct);
+      const wrongs = [...set];
+      // pick 3 wrongs
+      const picked = [];
+      while(picked.length < 3){
+        const w = wrongs.splice(randInt(0, wrongs.length-1), 1)[0];
+        if(w !== undefined) picked.push(w);
       }
+      const all = [correct, ...picked].sort(()=>Math.random()-0.5);
+      return all;
+    }
 
-      document.getElementById("score").innerText = score;
-      document.getElementById("streak").innerText = streak;
-      updateArena();
-      generateQuestion();
-    };
+    let prompt = "";
+    let correct = "";
+    let answers = [];
 
-    document.getElementById("choices").appendChild(btn);
+    if(t === "within_k"){
+      const k = choice([1,2,3]);
+      prompt = `Scores are approximately normal with μ = ${mu} and σ = ${sigma}. About what percent of data fall between ${mu - k*sigma} and ${mu + k*sigma}?`;
+      correct = (k===1) ? "68%" : (k===2) ? "95%" : "99.7%";
+      answers = makeChoices(correct, ["68%","95%","99.7%","50%","81.5%","34%","13.5%","2.5%"]);
+    }
+
+    if(t === "range_for_pct"){
+      const k = choice([1,2,3]);
+      const pct = (k===1) ? "68%" : (k===2) ? "95%" : "99.7%";
+      prompt = `Scores are approximately normal with μ = ${mu} and σ = ${sigma}. Which interval captures about ${pct} of the data?`;
+      const goodRange = `${mu - k*sigma} to ${mu + k*sigma}`;
+      // plausible wrong ranges
+      const wrong1 = `${mu - (k+1)*sigma} to ${mu + (k+1)*sigma}`;
+      const wrong2 = `${mu - Math.max(1,k-1)*sigma} to ${mu + Math.max(1,k-1)*sigma}`;
+      const wrong3 = `${mu} to ${mu + k*sigma}`;
+      correct = goodRange;
+      answers = [correct, wrong1, wrong2, wrong3].sort(()=>Math.random()-0.5);
+    }
+
+    if(t === "segment"){
+      const seg = choice([
+        {label:`between μ and μ + 1σ`, pct:"34%", a: mu, b: p1},
+        {label:`between μ - 1σ and μ`, pct:"34%", a: m1, b: mu},
+        {label:`between μ + 1σ and μ + 2σ`, pct:"13.5%", a: p1, b: p2},
+        {label:`between μ - 2σ and μ - 1σ`, pct:"13.5%", a: m2, b: m1},
+        {label:`between μ + 2σ and μ + 3σ`, pct:"2.35%", a: p2, b: p3},
+        {label:`between μ - 3σ and μ - 2σ`, pct:"2.35%", a: m3, b: m2},
+      ]);
+      prompt = `Scores are approximately normal with μ = ${mu} and σ = ${sigma}. About what percent of data fall between ${seg.a} and ${seg.b}?`;
+      correct = seg.pct;
+      answers = makeChoices(correct, ["34%","13.5%","2.35%","0.15%","68%","95%","2.5%","81.5%"]);
+    }
+
+    if(t === "tail"){
+      const tail = choice([
+        {desc:`greater than μ + 2σ`, pct:"2.5%", cutoff: p2},
+        {desc:`less than μ - 2σ`, pct:"2.5%", cutoff: m2},
+        {desc:`greater than μ + 3σ`, pct:"0.15%", cutoff: p3},
+        {desc:`less than μ - 3σ`, pct:"0.15%", cutoff: m3},
+      ]);
+      prompt = `Scores are approximately normal with μ = ${mu} and σ = ${sigma}. About what percent of data are ${tail.desc} (i.e., ${tail.cutoff} ${tail.desc.includes("less") ? "or lower" : "or higher"})?`;
+      correct = tail.pct;
+      answers = makeChoices(correct, ["2.5%","0.15%","5%","97.5%","34%","13.5%"]);
+    }
+
+    if(t === "between_edges"){
+      // choose asymmetric bounds using -1, +2, etc.
+      const bounds = choice([
+        {lo:-1, hi:2, pct:"81.5%"},
+        {lo:-2, hi:1, pct:"81.5%"},
+        {lo:-1, hi:1, pct:"68%"},
+        {lo:-2, hi:2, pct:"95%"},
+        {lo:-3, hi:1, pct:"97.35%"},
+        {lo:-1, hi:3, pct:"97.35%"}
+      ]);
+      const loVal = mu + bounds.lo*sigma;
+      const hiVal = mu + bounds.hi*sigma;
+      prompt = `Scores are approximately normal with μ = ${mu} and σ = ${sigma}. About what percent of data fall between ${loVal} and ${hiVal}?`;
+      correct = bounds.pct;
+      answers = makeChoices(correct, ["68%","95%","99.7%","81.5%","97.35%","34%","13.5%","2.5%"]);
+    }
+
+    if(t === "count"){
+      // pick a percent scenario and ask for count out of N
+      const scen = choice([
+        {pct: "68%", frac: 0.68, label:`within ±1σ`},
+        {pct: "95%", frac: 0.95, label:`within ±2σ`},
+        {pct: "99.7%", frac: 0.997, label:`within ±3σ`},
+        {pct: "34%", frac: 0.34, label:`between μ and μ+1σ`},
+        {pct: "13.5%", frac: 0.135, label:`between μ+1σ and μ+2σ`},
+        {pct: "2.5%", frac: 0.025, label:`above μ+2σ`},
+      ]);
+      const correctCount = Math.round(N * scen.frac);
+      // make plausible wrong counts
+      const wrongs = [
+        Math.round(N * (1 - scen.frac)),
+        Math.round(N * (scen.frac / 2)),
+        Math.round(N * Math.min(0.999, scen.frac + 0.05)),
+        Math.round(N * Math.max(0.001, scen.frac - 0.05))
+      ].filter(x => x !== correctCount);
+
+      prompt = `In a large set of about ${N} scores (approximately normal), about how many are ${scen.label}?`;
+      correct = `${correctCount}`;
+      // Build answers as strings
+      const pool = [correct, ...wrongs.slice(0,3)].map(String);
+      // ensure length 4
+      while(pool.length < 4) pool.push(String(correctCount + randInt(10, 80)));
+      answers = pool.sort(()=>Math.random()-0.5);
+    }
+
+    return { prompt, correct, answers };
+  }
+
+  let current = null;
+
+  function renderQuestion(){
+    current = makeQuestion();
+    qEl.textContent = current.prompt;
+
+    choicesEl.innerHTML = "";
+    current.answers.forEach(a => {
+      const b = document.createElement("button");
+      b.textContent = a;
+      b.onclick = () => handleAnswer(a);
+      choicesEl.appendChild(b);
+    });
+
+    // timer
+    if(timerOn){
+      timeLeft = 18;
+      timeEl.textContent = `${timeLeft}s`;
+      startTimer();
+    } else {
+      timeEl.textContent = "OFF";
+      stopTimer();
+    }
+  }
+
+  // ------------------------
+  // Answer handling + race logic
+  // ------------------------
+  function handleAnswer(ans){
+    if(youDist >= 100 || rivalDist >= 100) return;
+
+    const correct = (ans === current.correct);
+
+    if(correct){
+      score++;
+      streak++;
+
+      // Your move scales with streak, rival small random
+      const base = 8;
+      const bonus = clamp(streak, 0, 6);  // up to +6
+      youDist += base + bonus;
+      rivalDist += choice([2,3,3,4]); // rival still moves a little
+
+      // choose trick
+      const trick = (streak >= 4) ? "spin" : "jump";
+      animateSkater(youEl, trick);
+
+      setStatus(`LANDED! ✅ +${base+bonus}% forward (streak ${streak})`, "good");
+    } else {
+      streak = 0;
+      // stumble + rival gains
+      youDist += choice([1,2]); // tiny progress
+      rivalDist += choice([7,8,9,10]);
+
+      animateSkater(youEl, "fall");
+      setStatus(`Oof 😭 Incorrect. Rival surges ahead!`, "bad");
+    }
+
+    scoreEl.textContent = score;
+    streakEl.textContent = streak;
+    updateLevel();
+    updateRaceUI();
+
+    // next question
+    if(youDist < 100 && rivalDist < 100){
+      renderQuestion();
+    }
+  }
+
+  // ------------------------
+  // Timer
+  // ------------------------
+  function startTimer(){
+    stopTimer();
+    tickHandle = setInterval(() => {
+      timeLeft--;
+      timeEl.textContent = `${timeLeft}s`;
+      if(timeLeft <= 0){
+        // auto "wrong" if time runs out
+        stopTimer();
+        handleAnswer("__TIMEOUT__");
+      }
+    }, 1000);
+  }
+  function stopTimer(){
+    if(tickHandle){
+      clearInterval(tickHandle);
+      tickHandle = null;
+    }
+  }
+
+  // ------------------------
+  // Controls
+  // ------------------------
+  function resetGame(){
+    stopTimer();
+    score = 0; streak = 0;
+    youDist = 0; rivalDist = 0;
+
+    scoreEl.textContent = "0";
+    streakEl.textContent = "0";
+    updateLevel();
+
+    // reset skater positions
+    youEl.style.setProperty("--x", "0px");
+    rivalEl.style.setProperty("--x", "0px");
+    youEl.style.transform = "translateX(0)";
+    rivalEl.style.transform = "translateX(0)";
+
+    // enable buttons
+    setStatus("Fresh ice. First to finish wins. ⛸️", "neutral");
+    renderQuestion();
+    updateRaceUI();
+  }
+
+  restartBtn.addEventListener("click", resetGame);
+
+  toggleTimerBtn.addEventListener("click", () => {
+    timerOn = !timerOn;
+    toggleTimerBtn.textContent = `Timer: ${timerOn ? "ON" : "OFF"}`;
+    renderQuestion();
   });
-}
 
-generateQuestion();
+  // Boot
+  resetGame();
 </script>
-
 </body>
 </html>
 
